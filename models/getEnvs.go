@@ -48,3 +48,19 @@ func WebDirGetEnv() string {
 
 	return webDir
 }
+
+func DBGetEnv() string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	dbFile := os.Getenv("TODO_DBFILE")
+
+	if dbFile == "" {
+		dbFile = "scheduler.db" // название файла согласно условию задачи
+		log.Println("dbFile path is empty. Default path ./scheduler.db will be used.")
+	}
+
+	return dbFile
+}
