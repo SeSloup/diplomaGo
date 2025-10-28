@@ -2,6 +2,7 @@ package api
 
 import (
 	"fmt"
+	"math"
 	"strconv"
 	"strings"
 	"time"
@@ -65,9 +66,9 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			return "", fmt.Errorf("unsupported repeat format: %s", repeat)
 		}
 
-		weekDays := strings.Split(steps[1], " ")
+		weekSteps := strings.Split(steps[1], " ")
 
-		for _, wd := range weekDays {
+		for _, wd := range weekSteps {
 			weekDay, err := strconv.Atoi(wd)
 			if err != nil {
 				return "", err
@@ -79,6 +80,30 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 			///
 			// ПРосчитать
+			currentTime := time.Now()          // Get the current time
+			dayOfWeek := currentTime.Weekday() // Get the day of the week
+			dayNumber := int(dayOfWeek)        // Convert to integer
+
+			mindiff := 7
+			nearestWeekDay := 0
+
+			for _, wdStr := range weekSteps {
+				wd, err := strconv.Atoi(wdStr)
+				if err != nil {
+					fmt.Println(err)
+				}
+				c := wd - dayNumber
+
+				diff := ((math.Sqrt(float64(c*c))*(-1.0)+float64(c))/(float64(c)*2.0))*7.0 + float64(c)
+				fmt.Println("diff", diff, "c", c)
+
+				if diff < float64(mindiff) {
+					mindiff = int(diff)
+					nearestWeekDay = wd
+				}
+
+			}
+			fmt.Println(nearestWeekDay, dayNumber)
 			///
 
 		}
