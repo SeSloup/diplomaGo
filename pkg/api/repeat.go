@@ -53,11 +53,13 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			return "", fmt.Errorf("unsupported count of days: %v", days)
 		}
 
+		startDate = startDate.AddDate(0, 0, days)
 		for {
-			startDate = startDate.AddDate(0, 0, days)
+
 			if startDate.After(now) {
 				break
 			}
+			startDate = now.AddDate(0, 0, 1)
 		}
 		return startDate.Format(dateFormat), nil
 
@@ -77,36 +79,43 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			if weekDay <= 0 || weekDay > 7 {
 				return "", fmt.Errorf("unsupported number of week day: %v", weekDay)
 			}
+		}
 
-			///
-			// ПРосчитать
-			currentTime := time.Now()          // Get the current time
-			dayOfWeek := currentTime.Weekday() // Get the day of the week
-			dayNumber := int(dayOfWeek)        // Convert to integer
+		dayOfWeek := startDate.Weekday() // Get the day of the week
+		dayNumber := int(dayOfWeek)      // Convert to integer
 
-			mindiff := 7
-			nearestWeekDay := 0
+		mindiff := 7
+		//nearestWeekDay := 0
 
-			for _, wdStr := range weekSteps {
-				wd, err := strconv.Atoi(wdStr)
-				if err != nil {
-					fmt.Println(err)
-				}
-				c := wd - dayNumber
-
-				diff := ((math.Sqrt(float64(c*c))*(-1.0)+float64(c))/(float64(c)*2.0))*7.0 + float64(c)
-				fmt.Println("diff", diff, "c", c)
-
-				if diff < float64(mindiff) {
-					mindiff = int(diff)
-					nearestWeekDay = wd
-				}
-
+		// находим ближайший номер дня недели
+		for _, wdStr := range weekSteps {
+			wd, err := strconv.Atoi(wdStr)
+			if err != nil {
+				fmt.Println(err)
 			}
-			fmt.Println(nearestWeekDay, dayNumber)
-			///
+			c := wd - dayNumber
+
+			diff := ((math.Sqrt(float64(c*c))*(-1.0)+float64(c))/(float64(c)*2.0))*7.0 + float64(c)
+			fmt.Println("diff", diff, "c", c)
+
+			if diff < float64(mindiff) {
+				mindiff = int(diff)
+				//nearestWeekDay = wd
+			}
 
 		}
+		startDate = startDate.AddDate(0, 0, mindiff)
+		for {
+
+			if startDate.After(now) {
+				break
+			}
+			startDate = now.AddDate(0, 0, 1)
+		}
+
+		return startDate.Format(dateFormat), nil
+
+		///
 
 	case "m":
 
