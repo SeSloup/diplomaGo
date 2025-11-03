@@ -2,6 +2,7 @@ package server
 
 import (
 	"diplomaGoSologub/models"
+	"diplomaGoSologub/pkg/api"
 	"diplomaGoSologub/pkg/server/headers"
 
 	"log"
@@ -13,6 +14,8 @@ func Start() {
 	http.HandleFunc("/test", headers.ServeHTTP)
 
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(models.WebDirGetEnv()))))
+
+	api.Init()
 
 	//--start Listen
 	address := "127.0.0.1:" + models.PortGetEnv()
