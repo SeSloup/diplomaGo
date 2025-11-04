@@ -1,0 +1,103 @@
+package api
+
+import (
+	"fmt"
+	"net/http"
+	"time"
+
+	"diplomaGoSologub/pkg/db"
+)
+
+type ResponseTask struct {
+	ID    string `json:"id"`
+	Error string `json:"error"`
+}
+
+type Task struct {
+	ID      string `json:"id"`
+	Date    string `json:"date"`
+	Title   string `json:"title"`
+	Comment string `json:"comment"`
+	Repeat  string `json:"repeat"`
+}
+
+func AddTask(task *Task) (int64, error) {
+	var id int64
+	// определите запрос
+	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
+	res, err := db.DB.Exec(query, task.Date, task.Title, task.Comment, task.Repeat)
+	if err == nil {
+		id, err = res.LastInsertId()
+	}
+	return id, err
+}
+
+func checkDate(task *Task) error {
+	now := time.Now()
+	if task.Date == "" {
+		task.Date = now.Format(dateFormat)
+	}
+
+	_, err := time.Parse(dateFormat, task.Date)
+	if err != nil {
+		return fmt.Errorf("invalid date format, expected YYYYMMDD")
+	}
+
+	if task.Date < now.Format(dateFormat) {
+		if task.Repeat != "" {
+			next, err := NextDate(now, task.Date, task.Repeat)
+			if err != nil {
+				return err
+			}
+			task.Date = next
+		} else {
+			task.Date = now.Format(dateFormat)
+		}
+	}
+	return nil
+}
+
+func addTaskHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodPost {
+		http.Error(w, "method is not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	var task Task
+
+	if err := readJson(r.Body, &task); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": err.Error()})
+		return
+	}
+
+	if task.Title == "" {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": "title is empty"})
+
+		return
+	}
+
+	if err := checkDate(&task); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		writeJson(w, map[string]string{"error": err.Error()})
+
+		return
+	}
+
+	id, err := AddTask(&task)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		writeJson(w, map[string]string{"error": err.Error()})
+		return
+	}
+
+	writeJson(w, map[string]string{"id": fmt.Sprint(id)})
+}
+
+func taskHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	// обработка других методов будет добавлена на следующих шагах
+	case http.MethodPost:
+		addTaskHandler(w, r)
+	}
+}

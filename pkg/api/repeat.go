@@ -1,7 +1,6 @@
 package api
 
 import (
-	"encoding/json"
 	"fmt"
 	"log"
 	"math"
@@ -40,7 +39,6 @@ func daysSort(numbers []int) []int {
 			positives = append(positives, num)
 		}
 	}
-
 	// Шаг 2: Сортируем списки
 	sort.Ints(positives)                // Положительные в порядке возрастания
 	sort.Sort(sort.IntSlice(negatives)) // Отрицательные в порядке убывания
@@ -346,13 +344,6 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		return "", fmt.Errorf("unavailiable steps format: %s", steps[0])
 	}
 	return "", fmt.Errorf("no evaluates: %s", steps[0])
-}
-
-func writeJson(w http.ResponseWriter, data interface{}) {
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(data); err != nil {
-		http.Error(w, "Failed to write JSON", http.StatusInternalServerError)
-	}
 }
 
 func nextDayHandler(w http.ResponseWriter, r *http.Request) {
