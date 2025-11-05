@@ -3,7 +3,6 @@ package server
 import (
 	"diplomaGoSologub/models"
 	"diplomaGoSologub/pkg/api"
-	"diplomaGoSologub/pkg/server/headers"
 
 	"log"
 	"net/http"
@@ -11,7 +10,7 @@ import (
 
 func Start() {
 	//--fileServer
-	http.HandleFunc("/test", headers.ServeHTTP)
+	//http.HandleFunc("/test", headers.ServeHTTP)
 
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(models.WebDirGetEnv()))))
 

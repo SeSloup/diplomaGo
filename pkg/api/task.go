@@ -8,20 +8,7 @@ import (
 	"diplomaGoSologub/pkg/db"
 )
 
-type ResponseTask struct {
-	ID    string `json:"id"`
-	Error string `json:"error"`
-}
-
-type Task struct {
-	ID      string `json:"id"`
-	Date    string `json:"date"`
-	Title   string `json:"title"`
-	Comment string `json:"comment"`
-	Repeat  string `json:"repeat"`
-}
-
-func AddTask(task *Task) (int64, error) {
+func AddTask(task *db.Task) (int64, error) {
 	var id int64
 	// определите запрос
 	query := `INSERT INTO scheduler (date, title, comment, repeat) VALUES (?, ?, ?, ?)`
@@ -32,18 +19,18 @@ func AddTask(task *Task) (int64, error) {
 	return id, err
 }
 
-func checkDate(task *Task) error {
+func checkDate(task *db.Task) error {
 	now := time.Now()
 	if task.Date == "" {
 		task.Date = now.Format(dateFormat)
 	}
 
-	_, err := time.Parse(dateFormat, task.Date)
+	taskDate, err := time.Parse(dateFormat, task.Date)
 	if err != nil {
 		return fmt.Errorf("invalid date format, expected YYYYMMDD")
 	}
 
-	if task.Date < now.Format(dateFormat) {
+	if taskDate.Before(now) {
 		if task.Repeat != "" {
 			next, err := NextDate(now, task.Date, task.Repeat)
 			if err != nil {
@@ -62,7 +49,7 @@ func addTaskHandler(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "method is not allowed", http.StatusMethodNotAllowed)
 		return
 	}
-	var task Task
+	var task db.Task
 
 	if err := readJson(r.Body, &task); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
