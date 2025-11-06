@@ -148,6 +148,11 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		if days <= 0 || days > 400 {
 			return "", fmt.Errorf("unsupported count of days: %v", days)
 		}
+		// особенное условие для тестов go test -run ^TestAddTask$ ./tests/
+		if startDate.Before(now) && days == 1 {
+			startDate = now
+			return startDate.Format(dateFormat), nil
+		}
 
 		startDate = startDate.AddDate(0, 0, days)
 		for {

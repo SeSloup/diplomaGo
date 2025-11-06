@@ -34,6 +34,7 @@ func getTasks(t *testing.T, search string) []map[string]string {
 
 	var m map[string][]map[string]string
 	err = json.Unmarshal(body, &m)
+
 	assert.NoError(t, err)
 	return m["tasks"]
 }
@@ -47,6 +48,7 @@ func TestTasks(t *testing.T) {
 	assert.NoError(t, err)
 
 	tasks := getTasks(t, "")
+
 	assert.NotNil(t, tasks)
 	assert.Empty(t, tasks)
 
