@@ -194,7 +194,16 @@ func doneTaskHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	next, err := NextDate(now, task.Date, task.Repeat)
+	var next string
+
+	if now.Format(`20060102`) == task.Date {
+		//скорее всего закрыли задачу одним днем
+		next, err = NextDate(now.AddDate(0, 0, -1), task.Date, task.Repeat)
+	} else {
+		next, err = NextDate(now, task.Date, task.Repeat)
+	}
+	//
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		writeJson(w, map[string]string{"error": err.Error()})
