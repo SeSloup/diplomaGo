@@ -9,3 +9,17 @@ func Init() {
 	http.HandleFunc("/api/task/done", doneTaskHandler)
 
 }
+
+func taskHandler(w http.ResponseWriter, r *http.Request) {
+	switch r.Method {
+	// обработка других методов будет добавлена на следующих шагах
+	case http.MethodPost:
+		addTaskHandler(w, r)
+	case http.MethodGet:
+		getByIdTaskHandler(w, r)
+	case http.MethodPut:
+		updateTaskHandler(w, r)
+	case http.MethodDelete:
+		deleteTaskHandler(w, r)
+	}
+}

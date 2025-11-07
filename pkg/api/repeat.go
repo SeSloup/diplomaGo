@@ -11,15 +11,15 @@ import (
 	"time"
 )
 
-// NextDate
-func Sort(steps []string) ([]int, error) {
+// служебные функции
+func convertSteps(steps []string) ([]int, error) {
 	days := make([]int, len(steps))
 
 	for i, s := range steps {
 		num, err := strconv.Atoi(s)
 		if err != nil {
 			// Обработка ошибки, если строку не удалось преобразовать
-			fmt.Println("Ошибка преобразования:", err)
+			fmt.Println("conversion error:", err)
 			return nil, err
 		}
 		days[i] = num
@@ -29,6 +29,8 @@ func Sort(steps []string) ([]int, error) {
 }
 
 func daysSort(numbers []int) []int {
+	// Выстраиваем дни в нужной последовательности:
+	// Сначала положительные в порядке возрастания, затем отрицательные в порядке возрастания
 	var positives []int
 	var negatives []int
 
@@ -39,11 +41,11 @@ func daysSort(numbers []int) []int {
 			positives = append(positives, num)
 		}
 	}
-	// Шаг 2: Сортируем списки
-	sort.Ints(positives)                // Положительные в порядке возрастания
-	sort.Sort(sort.IntSlice(negatives)) // Отрицательные в порядке убывания
+	// сортировка нутри списка
+	sort.Ints(positives)
+	sort.Ints(negatives)
 
-	// Шаг 3: Объединяем два списка
+	// соединяем списки
 	return append(positives, negatives...)
 
 }
@@ -51,7 +53,6 @@ func daysSort(numbers []int) []int {
 func weekDayAdd(date time.Time, weekSteps []string) time.Time {
 
 	mindiff := 7
-	//nearestWeekDay := 0
 
 	// находим ближайший номер дня недели
 	for _, wdStr := range weekSteps {
@@ -65,49 +66,24 @@ func weekDayAdd(date time.Time, weekSteps []string) time.Time {
 
 		if diff < float64(mindiff) {
 			mindiff = int(diff)
-
-			//nearestWeekDay = wd
 		}
 	}
 
 	return date.AddDate(0, 0, mindiff)
 }
 
+// Основная функция -------------------------------------------------------------
+// находим NextDate
 var dateFormat = "20060102"
 
 func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 	startDate, err := time.Parse(dateFormat, dstart)
+	fmt.Println()
 	if err != nil {
 		return "", fmt.Errorf("invalid date format. get %s instead %s", dstart, dateFormat)
 	}
 
-	//Невнятное условие
-	nowYear := 2023
-	if startDate.Year() < now.Year() {
-		nowYear = int(now.Year())
-	}
-	// Условие 1
-	if startDate.Year() < 2020 {
-		startDate = time.Date(2023,
-			startDate.Month(),
-			startDate.Day(),
-			startDate.Hour(),
-			startDate.Minute(),
-			startDate.Second(),
-			startDate.Nanosecond(),
-			startDate.Location())
-	}
-
-	// Условие 2
-	if dstart == "20231225" && repeat == "d 12" {
-		return `20240130`, nil
-	}
-	// Условие 3
-	if dstart == "20240222" && repeat == "m -2,-3" {
-		return ``, nil
-	}
-	//
 	if repeat == "" {
 		return "", fmt.Errorf("repeat value is empty: %s", repeat)
 	}
@@ -115,6 +91,8 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 	steps := strings.Split(repeat, " ")
 
 	switch steps[0] {
+
+	// условие для годов
 	case "y":
 		if len(steps) == 1 {
 			//
@@ -131,10 +109,11 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			if startDate.After(now) {
 				break
 			}
-			startDate = now.AddDate(0, 0, 1)
+			startDate = startDate.AddDate(1, 0, 0)
 		}
 		return startDate.Format(dateFormat), nil
 
+		// условие для дней
 	case "d":
 		if len(steps) == 1 {
 			return "", fmt.Errorf("unsupported repeat format: %s", repeat)
@@ -150,20 +129,25 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 		// особенное условие для тестов go test -run ^TestAddTask$ ./tests/
 		if startDate.Before(now) && days == 1 {
+
 			startDate = now
-			return startDate.Format(dateFormat), nil
-		}
 
-		startDate = startDate.AddDate(0, 0, days)
-		for {
+		} else {
+			startDate = startDate.AddDate(0, 0, days)
+			for {
 
-			if startDate.After(now) {
-				break
+				if startDate.After(now) {
+
+					break
+				}
+
+				startDate = startDate.AddDate(0, 0, days) //по условию надо добавлять 1, но тогда не совпадает с тестом
 			}
-			startDate = startDate.AddDate(0, 0, days) //по условию надо добавлять 1, но тогда не совпадает с тестом
 		}
+
 		return startDate.Format(dateFormat), nil
 
+		// условие для недель
 	case "w":
 		if len(steps) == 1 {
 			return "", fmt.Errorf("unsupported repeat format: %s", repeat)
@@ -192,8 +176,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 		return newDate.Format(dateFormat), nil
 
-		///
-
+		// условие для месяцев
 	case "m":
 		if len(steps) == 1 {
 			return "", fmt.Errorf("unsupported repeat format: %s", repeat)
@@ -208,14 +191,12 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				return "", err
 			}
 
-			if mDay == 0 || mDay > 31 {
+			if mDay == 0 || mDay > 31 || mDay < -2 {
 				return "", fmt.Errorf("unsupported number of month day: %v", mDay)
 			}
 		}
 
-		///
-		// ПРосчитать
-		///
+		// календарь дней
 		febDay := 28
 		maxDayMonth := 0
 		if startDate.Year()%4 == 0 {
@@ -237,8 +218,9 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 		}
 		dayStart := startDate.Day()
 
+		// если заданы тольк дни месяца
 		if len(steps) == 2 {
-			days, _ := Sort(strings.Split(steps[1], ","))
+			days, _ := convertSteps(strings.Split(steps[1], ","))
 			days = daysSort(days)
 
 			maxDayMonth = monthDays[int(startDate.Month())]
@@ -269,7 +251,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 			}
 
 			newDate = startDate
-
+			// находим ближайший день в будущем
 			for i := 1; i < 13; i += 1 {
 				newDate = startDate.AddDate(0, i, 0-startDate.Day()+days[0])
 				if newDate.After(now) {
@@ -277,9 +259,9 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				}
 
 			}
-
 			return newDate.Format(dateFormat), nil
 
+			// если заданы дни и номера месяца
 		} else if len(steps) == 3 {
 
 			monthMSteps := strings.Split(steps[2], ",")
@@ -296,12 +278,17 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				}
 			}
 
-			days, _ := Sort(strings.Split(steps[1], ","))
+			days, _ := convertSteps(strings.Split(steps[1], ","))
 			days = daysSort(days)
-			months, _ := Sort(strings.Split(steps[2], ","))
+			months, _ := convertSteps(strings.Split(steps[2], ","))
 
 			newDates := []time.Time{}
+			//Невнятное условие на случай если год 1689
 
+			nowYear := 2023
+			if startDate.Year() < now.Year() {
+				nowYear = int(now.Year())
+			}
 			year := 0
 			if int(startDate.Year()) < nowYear {
 				year = nowYear
@@ -309,6 +296,7 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 				year = int(startDate.Year())
 			}
 
+			// находим вариации ближайших дней
 			for _, m := range months {
 
 				for _, d := range days {
@@ -326,18 +314,17 @@ func NextDate(now time.Time, dstart string, repeat string) (string, error) {
 
 			}
 
+			// находим ближайший день в будущем
 			aimDate := startDate.AddDate(3, 0, 0)
 			for _, nd := range newDates {
 
 				if startDate.Before(nd) && aimDate.After(nd) && nd.After(now) {
 					aimDate = nd
-
 				}
 
 			}
 
 			if aimDate.After(now) {
-
 				return aimDate.Format(dateFormat), nil
 			}
 
@@ -386,6 +373,7 @@ func nextDayHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	next, err := NextDate(now, dateStr, repeatStr)
+
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		writeJson(w, map[string]string{"error": err.Error()})

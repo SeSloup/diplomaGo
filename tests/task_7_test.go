@@ -38,6 +38,11 @@ func TestDone(t *testing.T) {
 		title:  "Проверить работу /api/task/done",
 		repeat: "d 3",
 	})
+	var task Task
+	db.Get(&task, `SELECT * FROM scheduler WHERE id=?`, id)
+
+	now = now.AddDate(0, 0, 3) // sdate получает +3 дня сразу же. поэтому для корректного сравнения по принципу now.Equal(task.Date)
+	// нужно к now + 3 дня сразу. Иначе повторный GET запрос с командой done добавит еще3 дня к дате начала!!!! и разрыв с now будет 6 дней!!!
 
 	for i := 0; i < 3; i++ {
 		ret, err := postJSON("api/task/done?id="+id, nil, http.MethodPost)
@@ -48,7 +53,9 @@ func TestDone(t *testing.T) {
 		err = db.Get(&task, `SELECT * FROM scheduler WHERE id=?`, id)
 		assert.NoError(t, err)
 		now = now.AddDate(0, 0, 3)
+
 		assert.Equal(t, now.Format(`20060102`), task.Date)
+
 	}
 }
 

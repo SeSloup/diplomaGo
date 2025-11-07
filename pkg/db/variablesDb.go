@@ -1,10 +1,5 @@
 package db
 
-type ResponseTask struct {
-	ID    string `json:"id"`
-	Error string `json:"error"`
-}
-
 type Task struct {
 	ID      string `json:"id"`
 	Date    string `json:"date"`
