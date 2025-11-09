@@ -64,3 +64,19 @@ func DBGetEnv() string {
 
 	return dbFile
 }
+
+func PwrdGetEnv() string {
+	err := godotenv.Load()
+	if err != nil {
+		log.Fatal("Error loading .env file")
+	}
+
+	password := os.Getenv("TODO_PASSWORD")
+
+	if password == "" {
+		fmt.Errorf("password is empty")
+		panic("password is unavailiable in .env")
+	}
+
+	return password
+}

@@ -1,12 +1,16 @@
 package api
 
-import "net/http"
+import (
+	"diplomaGoSologub/pkg/auth"
+	"net/http"
+)
 
 func Init() {
+	http.HandleFunc("/api/signin", auth.SigninHandler)
 	http.HandleFunc("/api/nextdate", nextDayHandler)
-	http.HandleFunc("/api/task", taskHandler)
-	http.HandleFunc("/api/tasks", tasksHandler)
-	http.HandleFunc("/api/task/done", doneTaskHandler)
+	http.HandleFunc("/api/task", auth.Auth(taskHandler))
+	http.HandleFunc("/api/tasks", auth.Auth(tasksHandler))
+	http.HandleFunc("/api/task/done", auth.Auth(doneTaskHandler))
 
 }
 
