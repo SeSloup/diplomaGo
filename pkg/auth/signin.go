@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"os"
 
@@ -26,6 +27,7 @@ var Secret = []byte("wLJoR/JJjaI/+zGpZqqpoxqU1R0d9hhd/GrogEW5qx4=")
 
 // signinHandler обрабатывает запрос на аутентификацию пользователя
 func SigninHandler(w http.ResponseWriter, r *http.Request) {
+	log.Println("SigninHandler start")
 	//Декодировка  JSON-тела запроса в структуру SignRequest
 	var req SignReq
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -36,6 +38,7 @@ func SigninHandler(w http.ResponseWriter, r *http.Request) {
 
 	//Сравнение введённого пользователем пароля с паролем в переменной окружения TODO_PASSWORD
 	if req.Password != os.Getenv("TODO_PASSWORD") {
+		log.Println("Неверный пароль")
 		resp := SignRes{Error: "Неверный пароль"}
 		json.NewEncoder(w).Encode(resp)
 		return

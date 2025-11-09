@@ -10,13 +10,13 @@ import (
 
 func Start() {
 	//--fileServer
-	//http.HandleFunc("/test", headers.ServeHTTP)
 
 	http.Handle("/", http.StripPrefix("/", http.FileServer(http.Dir(models.WebDirGetEnv()))))
 
 	api.Init()
 
 	//--start Listen
-	address := "127.0.0.1:" + models.PortGetEnv()
-	log.Println(http.ListenAndServe(address, nil))
+	address := "0.0.0.0:" + models.PortGetEnv()
+	log.Println("create link:", address)
+	log.Fatal(http.ListenAndServe(address, nil))
 }
